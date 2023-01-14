@@ -1,0 +1,137 @@
+diff -Nurd freeciv/server/commands.c freeciv/server/commands.c
+--- freeciv/server/commands.c	2022-12-03 07:02:01.878980808 +0200
++++ freeciv/server/commands.c	2022-12-03 07:02:11.367068641 +0200
+@@ -552,7 +552,7 @@
+       "all cities and units etc. Use with care!"), NULL,
+    CMD_ECHO_ALL, VCF_NONE, 50
+   },
+-  {"save",	ALLOW_ADMIN,
++  {"save",	ALLOW_CTRL,
+    /* TRANS: translate text between <> only */
+    N_("save\n"
+       "save <file-name>"),
+diff -Nurd freeciv/server/savegame/savemain.c freeciv/server/savegame/savemain.c
+--- freeciv/server/savegame/savemain.c	2022-12-03 07:02:01.882980845 +0200
++++ freeciv/server/savegame/savemain.c	2022-12-03 07:02:11.367068641 +0200
+@@ -152,8 +152,8 @@
+   stdata->save_compress_level = game.server.save_compress_level;
+ 
+   if (!orig_filename) {
+-    stdata->filepath[0] = '\0';
+-    filename = stdata->filepath;
++    con_write(C_FAIL, _("Failed saving game. Missing filename."));
++    return;
+   } else {
+     sz_strlcpy(stdata->filepath, orig_filename);
+     if ((filename = strrchr(stdata->filepath, '/'))) {
+@@ -190,13 +190,6 @@
+     }
+   }
+ 
+-  /* If orig_filename is NULL or empty, use a generated default name. */
+-  if (filename[0] == '\0') {
+-    /* manual save */
+-    generate_save_name(game.server.save_name, filename,
+-                       sizeof(stdata->filepath) + stdata->filepath - filename, "manual");
+-  }
+-
+   timer_cpu = timer_new(TIMER_CPU, TIMER_ACTIVE, "save cpu");
+   timer_user = timer_new(TIMER_USER, TIMER_ACTIVE, "save user");
+   timer_start(timer_cpu);
+diff -Nurd freeciv/server/stdinhand.c freeciv/server/stdinhand.c
+--- freeciv/server/stdinhand.c	2022-12-03 07:02:01.882980845 +0200
++++ freeciv/server/stdinhand.c	2022-12-03 07:02:11.367068641 +0200
+@@ -19,6 +19,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <time.h>
+ 
+ #ifdef FREECIV_HAVE_LIBREADLINE
+ #include <readline/readline.h>
+@@ -668,11 +669,6 @@
+ **************************************************************************/
+ static bool save_command(struct connection *caller, char *arg, bool check)
+ {
+-  if (is_restricted(caller)) {
+-    cmd_reply(CMD_SAVE, caller, C_FAIL,
+-              _("You cannot save games manually on this server."));
+-    return FALSE;
+-  }
+   if (!check) {
+     save_game(arg, "User request", FALSE);
+   }
+@@ -3803,10 +3799,20 @@
+   }
+ 
+   {
++    char websave[300];
++    struct strvec *webdirs = strvec_new();
++
++    if (caller != NULL) {
++      fc_snprintf(websave, sizeof(websave), "%s/%s", srvarg.saves_pathname, caller->username);
++      strvec_append(webdirs, websave);
++    }
++    fc_snprintf(websave, sizeof(websave), "%s/pbem", srvarg.saves_pathname);
++    strvec_append(webdirs, websave);
++
+     /* it is a normal savegame or maybe a scenario */
+     char testfile[MAX_LEN_PATH];
+     const struct strvec *pathes[] = {
+-      get_save_dirs(), get_scenario_dirs(), NULL
++      get_save_dirs(), get_scenario_dirs(), webdirs, NULL
+     };
+     const char *exts[] = {
+       "sav", "gz", "bz2", "xz", "sav.gz", "sav.bz2", "sav.xz", "sav.zst", NULL
+@@ -4500,6 +4506,31 @@
+ 
+   level = command_level(command_by_number(cmd));
+ 
++  /* Special savegame handling for Freeciv-web. */
++  if (strncmp(game.server.meta_info.type, "pbem", 4) == 0 
++      && cmd == CMD_SAVE && caller) {
++    char pbemfile[200];
++    fc_snprintf(pbemfile, sizeof(pbemfile), "%s/pbem/pbem-%s-%u", srvarg.saves_pathname, caller->username, (unsigned)time(NULL));
++    sz_strlcpy(arg, pbemfile);
++  } else if (cmd == CMD_SAVE && caller) {
++    char savefile[300];
++    char buffer[30];
++    time_t timer;
++    struct tm* tm_info;
++
++    time(&timer);
++    tm_info = localtime(&timer);
++    strftime(buffer, 30, "%Y-%m-%d-%H_%M", tm_info);
++    fc_snprintf(savefile, sizeof(savefile), "%s/%s/%s_T%u_%s", srvarg.saves_pathname, 
++                caller->username, caller->username, game.info.turn, buffer);
++    sz_strlcpy(arg, savefile);
++
++    /* create sub-directory from players username in saves directory. */
++    char savedir[300];
++    fc_snprintf(savedir, sizeof(savedir), "%s/%s", srvarg.saves_pathname, caller->username);
++    make_dir(savedir);
++  }
++
+   if (conn_can_vote(caller, NULL) && level == ALLOW_CTRL
+       && conn_get_access(caller) == ALLOW_BASIC && !check
+       && !vote_would_pass_immediately(caller, cmd)) {
+diff -Nurd freeciv/utility/shared.c freeciv/utility/shared.c
+--- freeciv/utility/shared.c	2022-12-03 07:02:01.946981438 +0200
++++ freeciv/utility/shared.c	2022-12-03 07:02:51.719442156 +0200
+@@ -1787,14 +1787,14 @@
+       }
+     }
+ #else  /* HAVE__MKDIR */
+-    if (mkdir(path, 0755) == -1
++    if (mkdir(path, 0775) == -1
+         && fc_get_errno() != EEXIST) {
+       free(path);
+       return FALSE;
+     }
+ #endif /* HAVE__MKDIR */
+ #else  /* FREECIV_MSWINDOWS */
+-    if (mkdir(path, 0755) == -1
++    if (mkdir(path, 0775) == -1
+         && fc_get_errno() != EEXIST) {
+       free(path);
+       return FALSE;

@@ -1,0 +1,38 @@
+diff --git a/server/maphand.c b/server/maphand.c
+index 9862015..86a7eae 100644
+--- a/server/maphand.c
++++ b/server/maphand.c
+@@ -463,7 +463,7 @@ void send_all_known_tiles(struct conn_list *dest)
+       conn_list_do_buffer(dest);
+     }
+ 
+-    send_tile_info(dest, ptile, FALSE);
++    send_tile_info(dest, ptile, TRUE);
+   } whole_map_iterate_end;
+ 
+   conn_list_do_unbuffer(dest);
+@@ -596,19 +596,21 @@ void send_tile_info(struct conn_list *dest, struct tile *ptile,
+       }
+ 
+       send_packet_tile_info(pconn, &info);
+-    } else if (send_unknown) {
++    } else {
+       info.known = TILE_UNKNOWN;
+       info.continent = 0;
+       info.owner = MAP_TILE_OWNER_NULL;
+       info.extras_owner = MAP_TILE_OWNER_NULL;
+       info.worked = IDENTITY_NUMBER_ZERO;
+ 
+-      info.terrain = terrain_count();
++      info.terrain = (NULL != tile_terrain(ptile))
++                      ? terrain_number(tile_terrain(ptile))
++                      : terrain_count();
+       info.resource = MAX_EXTRA_TYPES;
+       info.placing = -1;
+       info.place_turn = 0;
+ 
+-      BV_CLR_ALL(info.extras);
++      info.extras = ptile->extras; // WebGL client needs to know which tiles are rivers on game start.
+ 
+       info.label[0] = '\0';
+ 
