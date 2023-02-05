@@ -28,12 +28,7 @@ document.getElementById('themeButton').onclick = toggleTheme;
 //client version on update screen
 //newest version on update screen
 //current updates avalible
- 
-var version = '1.3.6';
-var today = new Date();
-var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
-var updateDate = 2022-12-30;
-var currentDate = today.getFullYear() - (today.getMonth()+1) - today.getDate();
+//none of that mattered for the live version of this website 
 
 var updateScreen = document.getElementById("updateScreen");
 updateScreen.style.display = 'none';

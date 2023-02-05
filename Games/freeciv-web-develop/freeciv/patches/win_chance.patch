@@ -1,0 +1,102 @@
+diff -Nurd freeciv/common/networking/packets.def freeciv/common/networking/packets.def
+--- freeciv/common/networking/packets.def	2022-10-23 07:40:04.229642294 +0300
++++ freeciv/common/networking/packets.def	2022-10-23 07:40:18.945779799 +0300
+@@ -2426,6 +2426,7 @@
+ PACKET_WEB_INFO_TEXT_REQ = 289; cs, dsend, handle-via-fields
+   TILE loc;
+   UNIT visible_unit;
++  UNIT focus_unit;
+ end
+ 
+ PACKET_WEB_INFO_TEXT_MESSAGE = 290; sc, dsend, handle-via-fields, no-handle
+diff -Nurd freeciv/server/maphand.c freeciv/server/maphand.c
+--- freeciv/server/maphand.c	2022-10-23 07:40:04.585645621 +0300
++++ freeciv/server/maphand.c	2022-10-23 07:40:18.949779837 +0300
+@@ -29,6 +29,7 @@
+ #include "base.h"
+ #include "borders.h"
+ #include "clientutils.h"
++#include "combat.h"
+ #include "events.h"
+ #include "game.h"
+ #include "map.h"
+@@ -2658,7 +2659,8 @@
+ **************************************************************************/
+ static const char *web_popup_info_text(struct tile *ptile,
+                                        struct player *pplayer,
+-                                       struct unit *punit)
++                                       struct unit *punit,
++                                       struct unit *funit)
+ {
+   const char *activity_text;
+   struct city *pcity = tile_city(ptile);
+@@ -2856,6 +2858,43 @@
+                       diplo_city_adjectives[ds->type]);
+       }
+     }
++    if (funit) {
++      int att_chance = FC_INFINITY, def_chance = FC_INFINITY;
++      bool found = FALSE;
++
++      unit_list_iterate(ptile->units, tile_unit) {
++	if (unit_owner(tile_unit) != unit_owner(funit)) {
++	  int att = unit_win_chance(funit, tile_unit, NULL) * 100;
++	  int def = (1.0 - unit_win_chance(tile_unit, funit, NULL)) * 100;
++
++	  found = TRUE;
++
++	  /* Presumably the best attacker and defender will be used. */
++	  att_chance = MIN(att, att_chance);
++	  def_chance = MIN(def, def_chance);
++	}
++      } unit_list_iterate_end;
++
++      if (found) {
++	/* TRANS: "Chance to win: A:95% D:46%  (%%25 is HTML encoding for '%' character.)" */
++	astr_add_line(&str, _("Chance to win: A:%d%%25 D:%d%%25"),
++		      att_chance, def_chance);	
++      }
++    }
++
++    /* TRANS: A is attack power, D is defense power, FP is firepower,
++     * HP is hitpoints (current and max). */
++    astr_add_line(&str, _("A:%d D:%d FP:%d HP:%d/%d"),
++                  ptype->attack_strength, ptype->defense_strength,
++                  ptype->firepower, punit->hp, ptype->hp);
++    {
++      const char *veteran_name =
++        utype_veteran_name_translation(ptype, punit->veteran);
++
++      if (veteran_name) {
++        astr_add(&str, " (%s)", veteran_name);
++      }
++    }
+ 
+     if (unit_owner(punit) == pplayer) {
+       /* Show bribe cost for own units. */
+@@ -2882,11 +2921,12 @@
+   Handle client request for tile information text.
+ **************************************************************************/
+ void handle_web_info_text_req(struct player *pplayer, int loc,
+-                              int visible_unit_id)
++                              int visible_unit_id, int focus_unit_id)
+ {
+   struct tile *ptile = index_to_tile(&(wld.map), loc);
+   struct unit *punit = (visible_unit_id == 0) ? NULL : game_unit_by_number(visible_unit_id);
+-  const char *info_text = web_popup_info_text(ptile, pplayer, punit);
++  struct unit *funit = (focus_unit_id == 0) ? NULL : game_unit_by_number(focus_unit_id);
++  const char *info_text = web_popup_info_text(ptile, pplayer, punit, funit);
+ 
+   conn_list_iterate(pplayer->connections, pconn) {
+     dsend_packet_web_info_text_message(pconn, info_text);
+diff -Nurd freeciv/server/maphand.h freeciv/server/maphand.h
+--- freeciv/server/maphand.h	2022-10-23 07:40:04.581645583 +0300
++++ freeciv/server/maphand.h	2022-10-23 07:40:18.949779837 +0300
+@@ -142,6 +142,6 @@
+                         int prob, bool reveal_cities);
+ 
+ void handle_web_info_text_req(struct player *pplayer, int loc,
+-                              int visible_unit_id);
++                              int visible_unit_id, int focus_unit_id);
+ 
+ #endif /* FC__MAPHAND_H */

@@ -1,0 +1,13 @@
+diff -Nurd freeciv/server/stdinhand.c freeciv/server/stdinhand.c
+--- freeciv/server/stdinhand.c	2022-12-15 07:51:47.415212794 +0200
++++ freeciv/server/stdinhand.c	2022-12-15 07:52:14.079425640 +0200
+@@ -3970,6 +3970,9 @@
+     } players_iterate_end;
+   } achievements_iterate_end;
+ 
++  /* Do not translate, as freeciv-web relies on exact string */
++  cmd_reply(CMD_DEFAULT, caller, C_OK, "Load complete");
++
+   return TRUE;
+ }
+ 

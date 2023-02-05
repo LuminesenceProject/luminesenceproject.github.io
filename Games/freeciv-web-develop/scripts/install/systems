@@ -1,0 +1,8 @@
+# Install script for different systems
+# vendor[TAB]codename[TAB]script
+Ubuntu	focal	deb.sh
+Ubuntu	jammy	deb.sh
+Ubuntu	kinetic	deb.sh
+Debian	buster	deb.sh
+Debian	bullseye	deb.sh
+Debian	bookworm	deb.sh
