@@ -190,11 +190,12 @@ main {
 }
 
 .solar {
-  --text-primary: #576e75;
-  --text-secondary: #35535c;
-  --bg-primary: #e6fafd;
-  --bg-secondary: #fefefe;
-  color: black;
+  --text-primary: #FFF;
+  --text-secondary: #FFF;
+  --bg-primary: #34568B;
+  --bg-secondary: #406aad;
+  color: #FFF;
+  background-color: #798EA4;
 }
 
 .theme-icon {
@@ -465,8 +466,37 @@ main {
 }
 
 @media screen and (max-width: 500px) {
-  svg {
-    width: 90vw;
-    height: 90vw;
+  
+  .discord,
+  .discord a {
+    width: 450px;
   }
+}
+
+.discord {
+  width: 900px;
+  height: 35px;
+  font-family: 'Uni Sans Demo', sans-serif;
+  border-radius: 4px;
+  background-image:  url("../Images/stacked-waves.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  font-weight: 700;
+  margin: auto auto;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.discord a {
+  z-index: 20;
+  text-align: center;
+  color: #FFF;
+  width: 900px;
+  height: 35px;
+  position: relative;
+  display: inline-block;
+  font-family: 'Uni Sans Demo', sans-serif;
+  font-weight: 700;
+  padding: 5px 5px 5px 5px;
 }

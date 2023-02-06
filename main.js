@@ -21,37 +21,63 @@ function toggleTheme() {
 
 document.getElementById('themeButton').onclick = toggleTheme;
 
-
-// client updater
-
-//list for website.
-//client version on update screen
-//newest version on update screen
-//current updates avalible
-//none of that mattered for the live version of this website 
-
 var updateScreen = document.getElementById("updateScreen");
 updateScreen.style.display = 'none';
+title = document.title.toString();
 
-document.getElementById("close").addEventListener("click", close);
 function close() {
   updateScreen.style.display = 'none';
-  return;
+  console.log("Closed version screen")
 }
 
-if (currentDate < updateDate) {
+let tokenLog = 10;
+function token() {
+  token = token -1;
+  localStorage.removeItem(token);
+  localStorage.setItem(token,'uses');
+}
+function close() {
+  updateScreen.style.display = 'none';
+  console.log("Closed version screen")
+}
+
+const version = 1.0;
+
+if (document.title.includes("Luminesence") == false) {
   updateScreen.style.display = 'block';
-  const themeMap = {};
+  console.log("Please reinstall a valid version of Luminesence");
+} else {
+  console.log("Valid version of Luminesence:" + version);
+  updateScreen.style.display = 'none';
 }
 
-if (currentDate < updateDate - 8) {
-  document.getElementById("close").style.display = 'none';
-  updateScreen.style.display = 'block';
+if (localStorage.getItem(tokenLog) > 1) {
+  document.body.innerHTML = '';
+  document.title = '404';
+  javascript:(function(){var i,l,styles = document.styleSheets;for(i=0,l=styles.length;i<l;i++){styles[i].disabled = true;}})()
+  document.styleSheet
+  document.write("<!DOCTYPE html>");
+  document.write("<html lang=\"en\">");
+  document.write("<head>");
+  document.write("    <meta charset=\"UTF-8\">");
+  document.write("    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">");
+  document.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
+  document.write("    <title>404<\/title>");
+  document.write("<\/head>");
+  document.write("<body>");
+  document.write("    <center>");
+  document.write("        <h1>End of free trial<\/h1>");
+  document.write("        <br>");
+  document.write("        <p>Your use of an external host has ended. Please reinstall a proper version of the Luminesence online website, or simply redownload it from a link, <a href=\"https:\/\/github.com\/LuminesenceProject\/luminesenceproject.github.io\">here<\/a>.<\/p>");
+  document.write("    <\/center>");
+  document.write("<\/body>");
+  document.write("<\/html>");
+  document.close();
 }
-
 
 // Luminesence Interface Thingy
 // forked from https://github.com/jangodev/CrownJS
+// he created titanium if thats cool
 /*
 let style = document.createElement('style')
 let title = document.createElement('h1')
