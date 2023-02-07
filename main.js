@@ -1,3 +1,4 @@
+
 const themeMap = {
   dark: 'light',
   light: 'solar',
@@ -25,54 +26,80 @@ var updateScreen = document.getElementById("updateScreen");
 updateScreen.style.display = 'none';
 title = document.title.toString();
 
-function close() {
-  updateScreen.style.display = 'none';
-  console.log("Closed version screen")
+
+function setCookie(cname,cvalue,exdays) {
+  const d = new Date();
+  d.setTime(d.getTime() + (exdays*24*60*60*1000));
+  let expires = "expires=" + d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
-let tokenLog = 10;
-function token() {
-  token = token -1;
-  localStorage.removeItem(token);
-  localStorage.setItem(token,'uses');
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }
-function close() {
+
+function checkCookie() {
+  let user = getCookie("token");
+  if (user != "") {
+    console.log("Cookie is in use.")
+  } else {
+     username = "guest";
+     if (username != "" && username != null) {
+       overwrite();
+     }
+  }
+}
+
+var close = document.getElementById('close');
+close.addEventListener("click", function() {
   updateScreen.style.display = 'none';
-  console.log("Closed version screen")
-}
+});
+
+
 
 const version = 1.0;
 
 if (document.title.includes("Luminesence") == false) {
   updateScreen.style.display = 'block';
   console.log("Please reinstall a valid version of Luminesence");
+  document.cookie = setCookie('guest','token',3);
+  checkCookie();
 } else {
   console.log("Valid version of Luminesence:" + version);
   updateScreen.style.display = 'none';
 }
 
-if (localStorage.getItem(tokenLog) > 1) {
-  document.body.innerHTML = '';
-  document.title = '404';
+function overwrite() {
   javascript:(function(){var i,l,styles = document.styleSheets;for(i=0,l=styles.length;i<l;i++){styles[i].disabled = true;}})()
-  document.styleSheet
-  document.write("<!DOCTYPE html>");
-  document.write("<html lang=\"en\">");
-  document.write("<head>");
-  document.write("    <meta charset=\"UTF-8\">");
-  document.write("    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">");
-  document.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">");
-  document.write("    <title>404<\/title>");
-  document.write("<\/head>");
-  document.write("<body>");
-  document.write("    <center>");
-  document.write("        <h1>End of free trial<\/h1>");
-  document.write("        <br>");
-  document.write("        <p>Your use of an external host has ended. Please reinstall a proper version of the Luminesence online website, or simply redownload it from a link, <a href=\"https:\/\/github.com\/LuminesenceProject\/luminesenceproject.github.io\">here<\/a>.<\/p>");
-  document.write("    <\/center>");
-  document.write("<\/body>");
-  document.write("<\/html>");
-  document.close();
+  document.body.innerHTML = '';  
+document.write('<!DOCTYPE html>');
+document.write('<html lang="en">');
+document.write('<head>');
+document.write('    <meta charset="UTF-8">');
+document.write('    <meta http-equiv="X-UA-Compatible" content="IE=edge">');
+document.write('    <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+document.write('    <title>404</title>');
+document.write('</head>');
+document.write('<body>');
+document.write('    <center>');
+document.write('        <h1>End of free trial</h1>');
+document.write('        <br>');
+document.write('        <p>Your use of an external host has ended. Please reinstall a proper version of the Luminesence online website, or simply redownload it from a link, <a href="https://github.com/LuminesenceProject/luminesenceproject.github.io">here</a>.</p>');
+document.write('    </center>');
+document.write('</body>');
+document.write('</html>');
 }
 
 // Luminesence Interface Thingy
