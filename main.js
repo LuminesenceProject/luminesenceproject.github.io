@@ -44,6 +44,7 @@ function getCookie(cname) {
       c = c.substring(1);
     }
     if (c.indexOf(name) == 0) {
+      console.log("Cookie is there.")
       return c.substring(name.length, c.length);
     }
   }
@@ -51,13 +52,12 @@ function getCookie(cname) {
 }
 
 function checkCookie() {
-  let user = getCookie("token");
-  if (user != "") {
-    console.log("Cookie is in use.")
+  let username = getCookie("token");
+  if (username != "") {
   } else {
      username = "guest";
      if (username != "" && username != null) {
-       overwrite();
+       console.log("Cookie is in use.");
      }
   }
 }
@@ -67,10 +67,28 @@ close.addEventListener("click", function() {
   updateScreen.style.display = 'none';
 });
 
+if ( window !== window.parent ) {
+      // The page is in an iframe  
+      overwrite();
+      console.warn("Iframe == true")
+} 
+else {     
+      // The page is not in an iframe  
+      console.warn("Iframe == false") 
+}
 
-
-const version = 1.0;
-
+const version = "v1.1.0";
+/*
+if (document.title.includes("luminesence") == false) {
+  updateScreen.style.display = 'block';
+  console.error("Please reinstall a valid version of Luminesence: " + version + " corrupted.");
+  document.cookie = setCookie('token','token',"1");
+  overwrite();
+} else {
+  console.log("Valid version of Luminesence: " + version);
+  updateScreen.style.display = 'none';
+}
+*/
 if (document.title.includes("Luminesence") == false) {
   updateScreen.style.display = 'block';
   console.log("Please reinstall a valid version of Luminesence");
