@@ -1,3 +1,7 @@
+window.onload = (e) => {
+  console.log("New version of Luminesence is ready.")
+  alert("Luminesence has been updated! Access the new version from this link: http://ipv6sucks.com/! \n Thank you for waiting so long for this update!")
+}
 
 const themeMap = {
   dark: 'light',
